@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Text2Dropbox</title>
+  </head>
+  <style>
+    body {
+      background-color: lightgray;
+      margin: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+    div#preview {
+      background-color: white;
+      padding: 5px;
+    }
+  </style>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script type="text/javascript">google.load("jquery", "1.6.2");</script>
+  <script type="text/javascript">
+    $(function () {
+      var preview = $('#preview');
+      preview.css({
+        height: $(window).height() - preview.offset().top - 20,
+        overflow: 'auto'
+      });
+      $('textarea').focus().keyup(function () {
+        var text   = $(this).val();
+        var format = $('input:radio[name=format]:checked').val();
+        var token  = $("input[name='csrf_token']").val();
+        $.ajax({
+          url: '/preview',
+          type: 'POST',
+          data: {
+            text: text,
+            format: format,
+            csrf_token: token,
+          },
+          success: function (result) {
+            preview.html(result);
+          }
+        });
+      });
+    });
+  </script>
+  <body>
+    <input type="radio" name="format" id="radio1" value="markdown" checked="checked"><label for="radio1">Markdown</label>
+    <input type="radio" name="format" id="radio2" value="xatena"><label for="radio2">はてな記法</label>
+    <input type="radio" name="format" id="radio3" value="pod"><label for="radio3">Pod</label>
+    <form method="post" action="[% uri_for('/upload') %]">
+      <textarea name="text"></textarea>
+      [% IF cookie %]
+      <input type="submit" value="Dropboxに保存" />
+      <a href="[% uri_for('/logout') %]">ログアウト</a>
+      [% ELSE %]
+      <a href="[% login %]">
+        <img src="[% uri_for('/static/img/dropbox.png') %]" style="height:40px" />
+      </a>
+      [% END %]
+    </form>
+    <hr>
+    <div id="preview"></div>
+  </body>
+</html>

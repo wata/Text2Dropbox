@@ -1,0 +1,10 @@
+Makefile
+inc/
+MANIFEST
+*.bak
+*.old
+nytprof.out
+nytprof/
+development.db
+test.db
+.DS_Store
