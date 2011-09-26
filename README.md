@@ -1,3 +1,3 @@
 Demo
 ==================
-- http://text2dropbox-wata.dotcloud.com/
+- http://text2box-wata.dotcloud.com/
