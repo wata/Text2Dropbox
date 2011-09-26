@@ -30,7 +30,7 @@
       $('textarea').focus().keyup(function () {
         var text   = $(this).val();
         var format = $('input:radio[name=format]:checked').val();
-        var token  = $("input[name='csrf_token']").val();
+        var token  = $('input[name=csrf_token]').val();
         $.ajax({
           url: '/preview',
           type: 'POST',
@@ -52,7 +52,7 @@
     <input type="radio" name="format" id="radio3" value="pod"><label for="radio3">Pod</label>
     <form method="post" action="[% uri_for('/upload') %]">
       <textarea name="text"></textarea>
-      [% IF cookie %]
+      [% IF user %]
       <input type="submit" value="Dropboxに保存" />
       <a href="[% uri_for('/logout') %]">ログアウト</a>
       [% ELSE %]

@@ -22,6 +22,7 @@ sub config {
             key          => "XXX your app key",
             secret       => "XXX your app secret",
             callback_url => "http://localhost:5000/callback",
+            context      => "dropbox",
         }
     }
 }
@@ -51,8 +52,8 @@ my $converters = {
 get '/' => sub {
     my ($c) = @_;
     return $c->render('index.tt', {
-        login  => $box->login,
-        cookie => $c->session->get('user'),
+        login => $box->login,
+        user  => $c->session->get('user'),
     });
 };
 
@@ -93,14 +94,13 @@ post '/upload' => sub {
 
     my $now = localtime;
     my ($fh, $filename) = tempfile;
-    print $fh $text;
+    print {$fh} $text;
     close $fh;
 
-    my $box = Net::Dropbox::API->new($c->config->{Dropbox});    #
     $box->access_token($user->{access_token});
     $box->access_secret($user->{access_secret});
-    $box->context('dropbox');
     $box->putfile($filename, 'Text2Dropbox', $now->ymd . '-' . $now->time('') . '.txt');
+
     return $c->redirect('/');
 };
 
