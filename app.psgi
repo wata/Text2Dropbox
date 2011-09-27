@@ -27,8 +27,6 @@ sub config {
     }
 }
 
-my $box = Net::Dropbox::API->new(config->{Dropbox});
-
 my $converters = {
     markdown => sub {
         my $text = shift;
@@ -51,20 +49,33 @@ my $converters = {
 
 get '/' => sub {
     my ($c) = @_;
-    return $c->render('index.tt', {
-        login => $box->login,
-        user  => $c->session->get('user'),
-    });
+
+    my $user = $c->session->get('user');
+    unless ($user) {
+        my $box = Net::Dropbox::API->new(config->{Dropbox});
+        my $link = $box->login;
+        $c->session->set('oauth' => {
+            request_token  => $box->request_token,
+            request_secret => $box->request_secret,
+        });
+        return $c->render('index.tt', { login => $link });
+    }
+
+    return $c->render('index.tt', { user  => $user });
 };
 
 get '/callback' => sub {
     my ($c) = @_;
     return $c->redirect('/') unless $c->req->param('oauth_token');
 
+    my $oauth = $c->session->get('oauth');
+    my $box = Net::Dropbox::API->new(config->{Dropbox});
+    $box->request_token($oauth->{request_token});
+    $box->request_secret($oauth->{request_secret});
     $box->auth;
     $c->session->set('user' => {
-        access_token   => $box->access_token,
-        access_secret  => $box->access_secret,
+        access_token  => $box->access_token,
+        access_secret => $box->access_secret,
     });
 
     return $c->redirect('/');
@@ -73,6 +84,7 @@ get '/callback' => sub {
 get '/logout' => sub {
     my ($c) = @_;
     $c->session->expire('user');
+    $c->session->expire('oauth');
     return $c->redirect('/');
 };
 
@@ -97,6 +109,7 @@ post '/upload' => sub {
     print {$fh} $text;
     close $fh;
 
+    my $box = Net::Dropbox::API->new(config->{Dropbox});
     $box->access_token($user->{access_token});
     $box->access_secret($user->{access_secret});
     $box->putfile($filename, 'Text2Dropbox', $now->ymd . '-' . $now->time('') . '.txt');
